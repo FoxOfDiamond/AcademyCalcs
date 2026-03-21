@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<head>
+    <link rel="stylesheet" href="stylesheet.css">
+    <title>
+        Combinatorics calculator
+    </title>
+</head>
+
+<body class="no-margin">
+    <div class="root">
+        <div class="flex flex-row default-flex-gap">
+            <div>
+                <h3> Options</h3>
+                <div class="input"><input type="checkbox" id="*fractions" checked> Use fractions </div><br>
+                <div class="input"><input type="checkbox" id="*percentages"> Use percentages </div><br>
+                <div class="input"><input type="checkbox" id="*round"> Round </div><br>
+
+                <h3>Table mode</h3>
+                <div class="input"><input type="text" id="a" value=5/13> Chance of A </div> <div class="input"><input
+                        type="checkbox" id="*a" checked> Anchored </div><br>
+                <div class="input"><input type="text" id="b" value=0.5> Chance of B </div>
+                <div class="input"><input type="checkbox" id="*b"> Anchored </div><br><br>
+
+                <div class="input"><input type="text" id="a+b" value=5/39> Chance of A and B</div> <div
+                        class="input"><input type="checkbox" id="*a+b"> Anchored </div><br>
+                <div class="input"><input type="text" id="-a+b" value=0.5> Chance of not A and B </div><br>
+                <div class="input"><input type="text" id="a+-b" value=0.5> Chance of A and not B </div><br>
+                <div class="input"><input type="text" id="-a+-b" value=0.5> Chance of not A and not B</div><br><br>
+
+                <div class="input"><input type="text" id="a/b" value=0.5> Chance of A if B </div><br>
+                <div class="input"><input type="text" id="b/a" value=0.5> Chance of B if A </div><br>
+            </div>
+            <div class="tree">
+                <div>
+                    <h3>Tree mode A</h3>
+                    <div class="input-tree"><input type="text" id="a" value=0.5> A </div> |
+                    <div class="input-tree"><input type="text" id="-a" value=0.5> not A </div><br><br>
+                    <div class="input-tree"><input type="text" id="b/a" value=0.5> B </div>
+                    <div class="input-tree"><input type="text" id="-b/a" value=0.5> not B </div> |
+                    <div class="input-tree"><input type="text" id="b/-a" value=0.5> B </div>
+                    <div class="input-tree"><input type="text" id="-b/-a" value=0.5> not B </div>
+                </div>
+                <div>
+                    <h3>Tree mode B</h3>
+                    <div class="input-tree"><input type="text" id="b" value=0.5> B </div> |
+                    <div class="input-tree"><input type="text" id="-b" value=0.5> not B </div><br><br>
+                    <div class="input-tree"><input type="text" id="a/b" value=0.5> A </div>
+                    <div class="input-tree"><input type="text" id="-a/b" value=0.5> not A </div> |
+                    <div class="input-tree"><input type="text" id="a/-b" value=0.5> A </div>
+                    <div class="input-tree"><input type="text" id="-a/-b" value=0.5> not A </div>
+                </div>
+            </div>
+        </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.8.1/math.js"></script>
+<script>
+    const math = window.math
+
+    function update(changed, isTree, fromTree) {
+        var chances = {}
+        var anchored = {}
+        var tree = {}
+
+        function parseFraction(val) {
+            let frac = math.fraction(1)
+            try {
+                if (val.indexOf("%") != -1) {
+                    frac = math.fraction(val.slice(0, val.length - 1)).div(100)
+                } else {
+                    frac = math.fraction(val)
+                }
+            } catch (error) {
+
+            }
+            return frac
+        }
+
+        function setValue(id, val, tree) {
+            id = id.replace("/", "\\/").replace("-", "\\-").replace("+", "\\+")
+            if (anchored.fractions) {
+                if (anchored.percentages && 100 % Number(val.d) == 0) {
+                    display = Number(val.n) * (100 / Number(val.d)) + "%"
+                } else {
+                    display = val.toFraction()
+                }
+            } else if (anchored.percentages) {
+                if (anchored.round) {
+                    display = Math.round((val.mul(100)).valueOf() * 100) / 100 + "%"
+                } else {
+                    display = (val.mul(100)).toString() + "%"
+                }
+            } else {
+                if (anchored.round) {
+                    display = Math.round(val.valueOf() * 100) / 100
+                } else {
+                    display = val.toString()
+                }
+            }
+            if (tree) {
+                document.querySelector(".input-tree input#" + id).value = display
+            } else {
+                document.querySelector(".input input#" + id).value = display
+            }
+        }
+
+        function updateData() {
+            document.querySelectorAll(".input").forEach(element => {
+                input = element.firstElementChild
+                let id = input.getAttribute("id")
+                if (input.getAttribute("type") == "text") {
+                    chances[id] = parseFraction(input.value)
+                }
+                if (input.getAttribute("type") == "checkbox") {
+                    id = id.slice(1, id.length)
+                    anchored[id] = input.checked
+                }
+            })
+            document.querySelectorAll(".input-tree").forEach(element => {
+                input = element.firstElementChild
+                let id = input.getAttribute("id")
+                if (input.getAttribute("type") == "text") {
+                    tree[id] = parseFraction(input.value)
+                }
+            })
+        }
+        updateData()
+
+        anchored[changed] = true
+        console.log(chances, anchored, tree, changed, tree)
+        if (!isTree) {
+            if (changed == "a" || changed == "b" || changed == "a+b" || changed == "a+-b" || changed == "-a+b" ||
+                changed == "-a+-b" || changed == null) {
+                if (!anchored["a+b"]) {
+                    if (changed == "-a+b") {
+                        setValue("a+b", chances.b.sub(chances["-a+b"]))
+                    }
+                    if (changed == "a+-b") {
+                        setValue("a+b", chances.a.sub(chances["a+-b"]))
+                    }
+                    if (changed == "-a+-b") {
+                        setValue("a+b", chances["-a+-b"].add(chances.a).add(chances.b).sub(1))
+                    }
+                } else if (!anchored["b"]) {
+                    if (changed == "-a+b") {
+                        setValue("b", chances["a+b"].add(chances["-a+b"]))
+                    }
+                    if (changed == "a+-b") {
+                        setValue("b", chances.a.sub(chances["a+-b"]).add(chances["-a+b"]))
+                    }
+                    if (changed == "-a+-b") {
+                        setValue("b", chances["-a+-b"].sub(chances.a).add(chances["a+b"]))
+                    }
+                }
+
+                updateData()
+
+                if (changed != "-a+b") {
+                    setValue("-a+b", chances.b.sub(chances["a+b"]))
+                }
+                if (changed != "a+-b") {
+                    setValue("a+-b", chances.a.sub(chances["a+b"]))
+                }
+                if (changed != "-a+-b") {
+                    setValue("-a+-b", chances["a+b"].sub(chances.a).sub(chances.b).add(1))
+                }
+
+                if (fromTree != "aba") {
+                    setValue("a/b", chances["a+b"].div(chances.b))
+                    setValue("b/a", chances["a+b"].div(chances.a))
+                }
+
+                updateData()
+
+                if (fromTree != "ba") {
+                    console.log(chances["b/a"])
+                    setValue("b/a", chances["b/a"], true)
+                    setValue("-b/a", chances["b/a"].neg().add(1), true)
+                }
+                if (fromTree != "b-a") {
+                    setValue("b/-a", chances["-a+b"].div(chances.a.neg().add(1)), true)
+                    setValue("-b/-a", chances["-a+-b"].div(chances.a.neg().add(1)), true)
+                }
+
+                if (fromTree != "ab") {
+                    setValue("a/b", chances["a/b"], true)
+                    setValue("-a/b", chances["a/b"].neg().add(1), true)
+                }
+                if (fromTree != "a-b") {
+                    setValue("a/-b", chances["-a+b"].div(chances.b.neg().add(1)), true)
+                    setValue("-a/-b", chances["-a+-b"].div(chances.b.neg().add(1)), true)
+                }
+
+                if (fromTree != "a") {
+                    setValue("a", chances.a, true)
+                    setValue("-a", chances.a.neg().add(1), true)
+                }
+
+                if (fromTree != "b") {
+                    setValue("b", chances.b, true)
+                    setValue("-b", chances.b.neg().add(1), true)
+                }
+
+                if (changed == null) {
+                    setValue("a", chances.a)
+                    setValue("b", chances.b)
+                    setValue("a+b", chances["a+b"])
+                }
+            } else {
+                if (!anchored.b && changed == "a/b") {
+                    setValue("b", chances["a+b"].div(chances["a/b"]))
+                    updateData()
+                    setValue("b/a", chances["a+b"].div(chances.a))
+                }
+                if (!anchored.a && changed == "b/a") {
+                    setValue("a", chances["a+b"].div(chances["b/a"]))
+                    updateData()
+                    setValue("a/b", chances["a+b"].div(chances.b))
+                }
+                if (!anchored["a+b"]) {
+                    if (changed == "a/b") {
+                        setValue("a+b", chances["b"].mul(chances["a/b"]))
+                        updateData()
+                        setValue("b/a", chances["a+b"].div(chances.a))
+                    }
+                    if (changed == "b/a") {
+                        setValue("a+b", chances["a"].mul(chances["b/a"]))
+                        updateData()
+                        setValue("a/b", chances["a+b"].div(chances.b))
+                    }
+                }
+                update(null, false, "aba")
+            }
+        } else {
+            if (changed == "a" || changed == "-a") {
+                if (changed == "a") {
+                    setValue("-a", tree["a"].neg().add(1), true)
+                } else {
+                    setValue("a", tree["-a"].neg().add(1), true)
+                }
+                updateData()
+                setValue("a", tree["a"])
+                update("a", false, "a")
+            }
+            if (changed == "b" || changed == "-b") {
+                if (changed == "b") {
+                    setValue("-b", tree["b"].neg().add(1), true)
+                } else {
+                    setValue("b", tree["-b"].neg().add(1), true)
+                }
+                updateData()
+                setValue("b", tree["b"])
+                update("b", false, "b")
+            }
+            if (changed == "b/a" || changed == "-b/a") {
+                if (changed == "-b/a") {
+                    setValue("b/a", tree["-b/a"].neg().add(1), true)
+                    setValue("a+-b", tree["-b/a"].mul(tree["a"]))
+
+                    update("a+-b", false, "ba")
+                } else {
+                    setValue("-b/a", tree["b/a"].neg().add(1), true)
+                    setValue("a+b", tree["b/a"].mul(tree["a"]))
+
+                    update("a+b", false, "ba")
+                }
+            }
+            if (changed == "b/-a" || changed == "-b-/a") {
+                if (changed == "-b/-a") {
+                    setValue("b/-a", tree["-b/-a"].neg().add(1), true)
+                    setValue("-a+-b", tree["-b/-a"].mul(tree["-a"]))
+
+                    update("-a+-b", false, "b-a")
+                } else {
+                    setValue("-b/-a", tree["b/-a"].neg().add(1), true)
+                    setValue("-a+b", tree["b/-a"].mul(tree["-a"]))
+
+                    update("-a+b", false, "b-a")
+                }
+            }
+            if (changed == "a/b" || changed == "-a/b") {
+                if (changed == "-a/b") {
+                    setValue("a/b", tree["-a/b"].neg().add(1), true)
+                    setValue("-a+b", tree["-a/b"].mul(tree["b"]))
+
+                    update("-a+b", false, "ab")
+                } else {
+                    setValue("-a/b", tree["a/b"].neg().add(1), true)
+                    setValue("a+b", tree["a/b"].mul(tree["b"]))
+
+                    update("a+b", false, "ab")
+                }
+            }
+            if (changed == "a/-b" || changed == "-a-/b") {
+                if (changed == "-a/-b") {
+                    setValue("a/-b", tree["-a/-b"].neg().add(1), true)
+                    setValue("--a+b", tree["-a/-b"].mul(tree["-b"]))
+
+                    update("--a+b", false, "a-b")
+                } else {
+                    setValue("-a/-b", tree["a/-b"].neg().add(1), true)
+                    setValue("-a+b", tree["a/-b"].mul(tree["-b"]))
+
+                    update("-a+b", false, "a-b")
+                }
+            }
+        }
+    }
+    [].slice.call(document.querySelectorAll(".input")).forEach(element => {
+        element.addEventListener("input", () => {
+            if (element.firstChild.getAttribute("input") == "checkbox") {
+                update()
+            } else {
+                update(element.firstChild.getAttribute("id"))
+            }
+        })
+    });
+    [].slice.call(document.querySelectorAll(".input-tree")).forEach(element => {
+        element.addEventListener("input", () => {
+            update(element.firstChild.getAttribute("id"), true)
+        })
+    });
+    update()
+</script>
