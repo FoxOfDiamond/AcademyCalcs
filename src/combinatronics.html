@@ -21,12 +21,36 @@
                         type="checkbox" id="*a" checked> Anchored </div><br>
                 <div class="input"><input type="text" id="b" value=0.5> Chance of B </div>
                 <div class="input"><input type="checkbox" id="*b"> Anchored </div><br><br>
-
-                <div class="input"><input type="text" id="a+b" value=5/39> Chance of A and B</div> <div
-                        class="input"><input type="checkbox" id="*a+b"> Anchored </div><br>
-                <div class="input"><input type="text" id="-a+b" value=0.5> Chance of not A and B </div><br>
-                <div class="input"><input type="text" id="a+-b" value=0.5> Chance of A and not B </div><br>
-                <div class="input"><input type="text" id="-a+-b" value=0.5> Chance of not A and not B</div><br><br>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Combinations</th>
+                            <th scope="col">A</th>
+                            <th scope="col">Not A</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">B</th>
+                            <td>
+                                <div class="input"><input type="text" id="a+b" value=5/39> </div> <br>
+                                    <div class="input"><input type="checkbox" id="*a+b"> Anchored </div>
+                            </td>
+                            <td style="vertical-align: top;">
+                                <div class="input"><input type="text" id="-a+b" value=0.5></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Not B</th>
+                            <td>
+                                <div class="input"><input type="text" id="a+-b" value=0.5></div>
+                            </td>
+                            <td>
+                                <div class="input"><input type="text" id="-a+-b" value=0.5></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table><br>
 
                 <div class="input"><input type="text" id="a/b" value=0.5> Chance of A if B </div><br>
                 <div class="input"><input type="text" id="b/a" value=0.5> Chance of B if A </div><br>

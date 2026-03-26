@@ -3,6 +3,14 @@ body {
     font-feature-settings: "ss09"on;
 }
 
+table {
+  border-collapse: collapse;
+  border: 3px solid rgb(98, 97, 97);
+}
+
+td, th {
+  border: 2px solid rgb(160 160 160);
+}
 .root {
     margin: 30px;
 }
